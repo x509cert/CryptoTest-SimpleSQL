@@ -3,14 +3,12 @@ using System.IO;
 using System.Text;
 using System.Linq;
 using System.Data;
-using System.Collections.Generic;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Data.Encryption.Cryptography;
 using Microsoft.Data.Encryption.Cryptography.Serializers;
 using Microsoft.Data.Encryption.AzureKeyVaultProvider;
 using Microsoft.Data.SqlClient;
-using Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider;
 
 #region Setup (Azure login, AKV and crypto settings)
 
@@ -23,7 +21,7 @@ byte[] wrappedDek = FromHexString("0x01A8000001680074007400700073003A002F002F006
 
 // Connect to AKV
 var akvKeys = new AzureKeyVaultKeyStoreProvider(creds);
-var kek = new KeyEncryptionKey("CMK_Auto6", @"https://xxxxx.vault.azure.net/keys/CMKAuto6/8172c92d58bf4bab959ce32f6d3e8c06", akvKeys);
+var kek = new KeyEncryptionKey("CMK_Auto6", @"https://kv-cryptotest.vault.azure.net/keys/CMKAuto6/8172c92d58bf4bab959ce32f6d3e8c06", akvKeys);
 
 // Crypto options and parameters
 var encryptionSettings =
@@ -57,7 +55,7 @@ File.WriteAllText(fileOut, temp.ToString());
 
 #endregion
 
-#region Insert encrypted CSV into SQL using BulkCopy
+#region Insert encrypted CSV into Azure SQL using BulkCopy
 
 var connectionString = "Data Source=sql-cryptotest.database.windows.net; Initial Catalog=LoTR;";
 using var conn = new SqlConnection(connectionString);
@@ -91,20 +89,20 @@ for (int i = 0; i < recordsInEnc.Length; i++)
     if (i > 0)
     {
         dt.Rows.Add();
-        dt.Rows[i - 1].SetField(0, elem[0]);
-        dt.Rows[i - 1].SetField(1, elem[1]);
-        dt.Rows[i - 1].SetField(2, Convert.FromBase64String(elem[2]));
+        dt.Rows[i - 1].SetField(0, elem[0]);                            // name
+        dt.Rows[i - 1].SetField(1, elem[1]);                            // location
+        dt.Rows[i - 1].SetField(2, Convert.FromBase64String(elem[2]));  // encrypted SSN
     }
 }
 
 dt.AcceptChanges();
 
+// sets the column names in Azure SQL - case sensitive
 string[] dbColumns = { "Name", "Location", "SSN"};
 foreach (var column in dbColumns)
     bulkCopy.ColumnMappings.Add(column, column);
 
 bulkCopy.DestinationTableName = "Characters2";
-
 bulkCopy.WriteToServer(dt);
 
 conn.Close();
