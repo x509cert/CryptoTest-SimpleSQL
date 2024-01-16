@@ -12,7 +12,7 @@
     <PackageReference Include="Microsoft.Azure.KeyVault.Cryptography" Version="3.0.5" />
     <PackageReference Include="Microsoft.Data.Encryption.AzureKeyVaultProvider" Version="0.2.0-pre" />
     <PackageReference Include="Microsoft.Data.Encryption.Cryptography" Version="0.2.0-pre" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="3.1.5" />
     <PackageReference Include="Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider" Version="3.0.0" />
   </ItemGroup>
 
